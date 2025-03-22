@@ -1,0 +1,62 @@
+class SusGPT {
+    constructor() {
+        this.greeting = "Hello! I am SusGPT, your AI assistant. How can I help you today?";
+    }
+
+    async getResponse(userInput) {
+        // Placeholder for AI logic (this could be replaced with an API call to an AI model)
+        const responses = {
+            "hello": "Hi there! How can I assist you?",
+            "who are you": "I am SusGPT, an AI assistant with intelligence, kindness, and research skills!",
+            "what can you do": "I can answer questions, assist with research, and provide insights! Try asking me something!"
+        };
+        
+        return responses[userInput.toLowerCase()] || "I'm still learning! But I can try to help. Ask me anything!";
+    }
+
+    startChat() {
+        console.log(this.greeting);
+        
+        // Example interaction
+        document.addEventListener("DOMContentLoaded", () => {
+            const chatBox = document.createElement("div");
+            chatBox.id = "chatBox";
+            chatBox.style.position = "fixed";
+            chatBox.style.bottom = "20px";
+            chatBox.style.right = "20px";
+            chatBox.style.width = "300px";
+            chatBox.style.height = "400px";
+            chatBox.style.backgroundColor = "#001F3F";
+            chatBox.style.borderRadius = "10px";
+            chatBox.style.padding = "10px";
+            chatBox.style.color = "white";
+            chatBox.style.overflowY = "auto";
+            chatBox.innerHTML = `<p>${this.greeting}</p>`;
+            
+            const input = document.createElement("input");
+            input.type = "text";
+            input.placeholder = "Type a message...";
+            input.style.width = "100%";
+            input.style.padding = "5px";
+            
+            input.addEventListener("keypress", async (event) => {
+                if (event.key === "Enter") {
+                    const userMessage = input.value;
+                    if (userMessage.trim() !== "") {
+                        const response = await this.getResponse(userMessage);
+                        chatBox.innerHTML += `<p><strong>You:</strong> ${userMessage}</p>`;
+                        chatBox.innerHTML += `<p><strong>SusGPT:</strong> ${response}</p>`;
+                        input.value = "";
+                        chatBox.scrollTop = chatBox.scrollHeight;
+                    }
+                }
+            });
+            
+            chatBox.appendChild(input);
+            document.body.appendChild(chatBox);
+        });
+    }
+}
+
+const susGPT = new SusGPT();
+susGPT.startChat();
