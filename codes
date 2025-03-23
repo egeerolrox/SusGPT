@@ -3,44 +3,183 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SusGPT Chatbot</title>
+    <title>SusGPT (Offline)</title>
     <style>
-        body { background-color: #001F3F; color: white; font-family: Arial, sans-serif; text-align: center; }
-        #chatBox { width: 300px; height: 400px; background-color: #002F5F; border-radius: 10px; padding: 10px; margin: auto; overflow-y: auto; }
-        input { width: 90%; padding: 5px; }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #001f3f;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: #003366;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        button {
+            background: #0044cc;
+            color: white;
+            border: none;
+            padding: 10px;
+            margin: 5px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        input {
+            width: 80%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: none;
+        }
+        #conversation {
+            text-align: left;
+            background: #002244;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .message {
+            margin: 5px 0;
+        }
+        .user {
+            color: #00ff00;
+        }
+        .bot {
+            color: #00ccff;
+        }
     </style>
 </head>
 <body>
-    <h1>SusGPT Chatbot</h1>
-    <div id="chatBox">
-        <p>Hello! I am SusGPT, your AI assistant. How can I help?</p>
+    <div class="container">
+        <h1>SusGPT (Offline)</h1>
+        <p>Hi there! I'm ready to help. 😊</p>
+        <div id="conversation"></div>
+        <input type="text" id="userInput" placeholder="Ask me anything...">
+        <button onclick="handleUserInput()">Send</button>
+        
+        <button id="toggleSearch">Toggle Search</button>
+        <button id="toggleGenerate">Toggle Generate</button>
+        <button id="toggleDeepThink">Toggle Deep Think</button>
+        <input type="file" id="addFile">
     </div>
-    <input type="text" id="userInput" placeholder="Type a message...">
+
     <script>
-        class SusGPT {
-            async getResponse(userInput) {
-                const responses = {
-                    "hello": "Hi there! How can I assist you?",
-                    "who are you": "I am SusGPT, an AI assistant with intelligence, kindness, and research skills!",
-                    "what can you do": "I can answer questions, assist with research, and provide insights!"
-                };
-                return responses[userInput.toLowerCase()] || "I'm still learning! Ask me anything!";
-            }
-        }
-        const susGPT = new SusGPT();
-        document.getElementById("userInput").addEventListener("keypress", async (event) => {
-            if (event.key === "Enter") {
-                const chatBox = document.getElementById("chatBox");
-                const userMessage = event.target.value;
-                if (userMessage.trim() !== "") {
-                    const response = await susGPT.getResponse(userMessage);
-                    chatBox.innerHTML += `<p><strong>You:</strong> ${userMessage}</p>`;
-                    chatBox.innerHTML += `<p><strong>SusGPT:</strong> ${response}</p>`;
-                    event.target.value = "";
-                    chatBox.scrollTop = chatBox.scrollHeight;
+        const susGPT = {
+            searchEnabled: true,
+            generateEnabled: true,
+            deepThinkEnabled: false,
+            conversationHistory: JSON.parse(localStorage.getItem("conversationHistory")) || [],
+
+            async processInput(userInput) {
+                if (!userInput.trim()) {
+                    return "Please enter a message.";
                 }
+
+                if (this.deepThinkEnabled) {
+                    userInput = `Think deeply: ${userInput}`;
+                }
+
+                let response = "";
+                
+                if (this.searchEnabled) {
+                    response += await this.searchWeb(userInput);
+                }
+                
+                if (this.generateEnabled) {
+                    response += await this.generateResponse(userInput);
+                }
+                
+                this.conversationHistory.push({ user: userInput, bot: response });
+                localStorage.setItem("conversationHistory", JSON.stringify(this.conversationHistory));
+                this.displayConversation();
+                return response;
+            },
+
+            async searchWeb(query) {
+                // Simulate a web search with local data
+                const simulatedResults = {
+                    "weather": "The weather is sunny and 75°F.",
+                    "news": "Here are the latest headlines: ...",
+                    "joke": "Why don't scientists trust atoms? Because they make up everything!"
+                };
+                return `Web search results for "${query}": ${simulatedResults[query.toLowerCase()] || "No results found."}\n`;
+            },
+
+            async generateResponse(query) {
+                // Simulate an AI response with local logic
+                const responses = {
+                    "hi": "Hello! How can I help you today?",
+                    "hello": "Hi there! What can I do for you?",
+                    "how are you": "I'm just a bot, but I'm doing great! How about you?",
+                    "tell me a joke": "Why don't skeletons fight each other? They don't have the guts!",
+                    "default": "I'm here to chat! What would you like to talk about?"
+                };
+                return responses[query.toLowerCase()] || responses["default"];
+            },
+
+            toggleSearch() {
+                this.searchEnabled = !this.searchEnabled;
+                alert(`Search is now ${this.searchEnabled ? "ON" : "OFF"}`);
+            },
+
+            toggleGenerate() {
+                this.generateEnabled = !this.generateEnabled;
+                alert(`Generate is now ${this.generateEnabled ? "ON" : "OFF"}`);
+            },
+
+            toggleDeepThink() {
+                this.deepThinkEnabled = !this.deepThinkEnabled;
+                alert(`Deep Thinking is now ${this.deepThinkEnabled ? "ON" : "OFF"}`);
+            },
+
+            async addFile(file) {
+                const text = await this.readFile(file);
+                alert(`Processed file '${file.name}':\n${text}`);
+                this.conversationHistory.push({ user: `Uploaded file: ${file.name}`, bot: `File content: ${text}` });
+                this.displayConversation();
+            },
+
+            readFile(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = () => reject("Failed to read file.");
+                    reader.readAsText(file);
+                });
+            },
+
+            displayConversation() {
+                const conversationDiv = document.getElementById("conversation");
+                conversationDiv.innerHTML = this.conversationHistory
+                    .map(entry => `
+                        <div class="message user"><strong>You:</strong> ${entry.user}</div>
+                        <div class="message bot"><strong>Bot:</strong> ${entry.bot}</div>
+                    `)
+                    .join("");
+                conversationDiv.scrollTop = conversationDiv.scrollHeight;
             }
-        });
+        };
+
+        function handleUserInput() {
+            const userInput = document.getElementById("userInput").value;
+            susGPT.processInput(userInput).then(response => {
+                document.getElementById("userInput").value = ""; // Clear input field
+            });
+        }
+
+        document.getElementById("toggleSearch").addEventListener("click", () => susGPT.toggleSearch());
+        document.getElementById("toggleGenerate").addEventListener("click", () => susGPT.toggleGenerate());
+        document.getElementById("toggleDeepThink").addEventListener("click", () => susGPT.toggleDeepThink());
+        document.getElementById("addFile").addEventListener("change", (event) => susGPT.addFile(event.target.files[0]));
+
+        // Display existing conversation history on page load
+        susGPT.displayConversation();
     </script>
 </body>
 </html>
